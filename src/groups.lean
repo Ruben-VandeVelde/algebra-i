@@ -1,5 +1,9 @@
+import analysis.inner_product_space.pi_L2
 import data.zmod.basic
+import group_theory.specific_groups.dihedral
 import linear_algebra.general_linear_group
+
+section
 
 variables {M A G : Type*}
 
@@ -39,7 +43,9 @@ def add (k:int) : mulint k → mulint k → mulint k
 
 end mulint
 
-def l1_1_6_2 (n : ℤ) : add_comm_group $ mulint n :=
+-- TODO: add_zero_class short-circuit in data/int/basic.lean?
+
+noncomputable def l1_1_6_2 (n : ℤ) : add_comm_group $ mulint n :=
 { add := mulint.add n,
   add_assoc := λ ⟨a, ha⟩ ⟨b, hb⟩ ⟨c, hc⟩, subtype.eq $ add_assoc a b c,
   zero := ⟨0, dvd_zero _⟩,
@@ -74,7 +80,7 @@ def l1_1_6_7 (K V : Type*) [field K] [add_comm_monoid V] [module K V] :
   add_comm_group V := module.add_comm_monoid_to_add_comm_group K
 
 def l1_1_6_8 (K V : Type*) [field K] (n : ℕ) :
-  group $ matrix.general_linear_group (fin n) K := infer_instance
+  group $ matrix.general_linear_group (fin n) K := units.group
 
 noncomputable def l1_1_6_8' (K V n : Type*) [field K] [subsingleton n] :
   comm_group $ matrix.general_linear_group n K :=
@@ -85,3 +91,25 @@ noncomputable def l1_1_6_8' (K V n : Type*) [field K] [subsingleton n] :
       finset.sum_singleton],
     rw [subsingleton.elim default i, subsingleton.elim j i, mul_comm] },
   ..(infer_instance : group _) }
+
+noncomputable def l1_1_6_8'' (K V n : Type*) [comm_semiring K] [subsingleton n] :
+  comm_monoid $ matrix n n K :=
+{ mul_comm := λ a b, by
+  { rw [matrix.mul_eq_mul, matrix.mul_eq_mul],
+    ext i j,
+    haveI : unique n := unique_of_subsingleton i,
+    simp [matrix.general_linear_group.coe_mul, matrix.mul_apply, finset.univ_unique,
+      finset.sum_singleton],
+    rw [subsingleton.elim default i, subsingleton.elim j i, mul_comm] },
+  ..(infer_instance : monoid _) }
+
+def l1_1_6_9 (α : Type*) (X : set α) : group (equiv.perm X) := infer_instance
+
+noncomputable def l1_1_6_10 (n : ℕ) :
+  group $ isometric (euclidean_space ℝ (fin n)) (euclidean_space ℝ (fin n)) := infer_instance
+
+def l1_1_6_11 (n : ℕ) : group (dihedral_group n) := infer_instance
+
+end
+
+lemma ex_1_1_1 {G : Type*} [group G] (x y : G) : (x * y)⁻¹ = y⁻¹ * x⁻¹ := mul_inv_rev _ _
