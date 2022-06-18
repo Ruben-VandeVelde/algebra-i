@@ -113,3 +113,58 @@ def l1_1_6_11 (n : ℕ) : group (dihedral_group n) := infer_instance
 end
 
 lemma ex_1_1_1 {G : Type*} [group G] (x y : G) : (x * y)⁻¹ = y⁻¹ * x⁻¹ := mul_inv_rev _ _
+
+namespace ex1_1_2
+
+variables {G : Type*} [has_one G] [has_mul G] [has_inv G] [is_associative G (*)]
+  (h1 : ∀ a : G, a * 1 = a) (h2 : ∀ a : G, a * a⁻¹ = 1)
+
+include h1 h2
+
+-- Based on https://math.stackexchange.com/questions/537572/any-set-with-associativity-left-identity-left-inverse-is-a-group
+lemma one_mul (a : G) : 1 * a = a :=
+begin
+  have : a * (a⁻¹ * a) * a⁻¹ = a * (a * a⁻¹) * a⁻¹,
+  { calc a * (a⁻¹ * a) * a⁻¹
+        = (a * a⁻¹) * (a * a⁻¹) : _
+    ... = (a * a⁻¹) * 1 : _
+    ... = a * 1 * a⁻¹ : _
+    ... = a * (a * a⁻¹) * a⁻¹ : _,
+    { rw [←@is_associative.assoc _ (*), ←@is_associative.assoc _ (*)] },
+    { rw h2 },
+    { rw [h1, h1] },
+    { rw h2 } },
+  have : a * (a⁻¹ * a) = a * (a * a⁻¹),
+  { have := congr_arg (* a⁻¹⁻¹) this,
+    simp only at this,
+    rw [@is_associative.assoc _ (*), h2, h1] at this,
+    rw [@is_associative.assoc _ (*), h2 a⁻¹, h1] at this,
+    exact this },
+  rw [h2, h1] at this,
+  rwa [←h2 a, @is_associative.assoc _ (*)],
+end
+
+lemma mul_left_inv (a : G) : a⁻¹ * a = 1 :=
+begin
+  calc a⁻¹ * a
+      = a⁻¹ * a⁻¹⁻¹ : _
+  ... = 1 : h2 a⁻¹,
+  apply congr_arg,
+  calc a
+      = a * 1 : (h1 a).symm
+  ... = a * (a⁻¹ * a⁻¹⁻¹) : by rw h2
+  ... = (a * a⁻¹) * a⁻¹⁻¹ : (is_associative.assoc a a⁻¹ a⁻¹⁻¹).symm
+  ... = 1 * a⁻¹⁻¹ : by rw h2
+  ... = a⁻¹⁻¹ : one_mul h1 h2 a⁻¹⁻¹,
+end
+
+def ex1_1_2  : group G :=
+{ mul_assoc := is_associative.assoc,
+  mul_left_inv := by convert mul_left_inv h1 h2,
+  one_mul := by convert one_mul h1 h2,
+  mul_one := by exact h1,
+  ..(by assumption : has_one G),
+  ..(by assumption : has_mul G),
+  ..(by assumption : has_inv G) }
+
+end ex1_1_2
