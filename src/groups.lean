@@ -168,3 +168,40 @@ def ex1_1_2  : group G :=
   ..(by assumption : has_inv G) }
 
 end ex1_1_2
+
+namespace ex1_1_3
+
+instance : has_mul { z : ℂ // ∥z∥ = 1 } :=
+⟨λ a b, ⟨a * b, by rw [norm_mul, a.prop, b.prop, one_mul]⟩⟩
+
+lemma mul_def (a b : { z : ℂ // ∥z∥ = 1 }) :
+  a * b = ⟨a * b, by rw [norm_mul, a.prop, b.prop, one_mul]⟩ := rfl
+
+def mul_assoc (a b c : { z : ℂ // ∥z∥ = 1 }) : a * b * c = a * (b * c) :=
+begin
+  simp [mul_def, mul_assoc],
+end
+
+noncomputable instance : has_inv { z : ℂ // ∥z∥ = 1 } :=
+⟨λ a, ⟨a⁻¹, by rw [norm_inv, a.prop, inv_one]⟩⟩
+
+lemma inv_def (a : { z : ℂ // ∥z∥ = 1 }) :
+  a⁻¹ = ⟨a⁻¹, by rw [norm_inv, a.prop, inv_one]⟩ := rfl
+
+instance : has_one { z : ℂ // ∥z∥ = 1 } := ⟨⟨1, norm_one⟩⟩
+
+lemma one_def : (1 : { z : ℂ // ∥z∥ = 1 }) = ⟨1, norm_one⟩ := rfl
+
+noncomputable def ex1_1_3 : group { z : ℂ // ∥z∥ = 1 } := {
+  mul := (*),
+  mul_assoc := mul_assoc,
+  one := 1,
+  one_mul := λ a, by simp [mul_def, one_def],
+  mul_one := λ a, by simp [mul_def, one_def],
+  inv := λ a, a⁻¹,
+  mul_left_inv := λ a, by {
+    have : (a : ℂ) ≠ 0,
+    { rw [←norm_ne_zero_iff, a.prop], exact one_ne_zero },
+    simp [mul_def, inv_def, inv_mul_cancel this, one_def] } }
+
+end ex1_1_3
