@@ -89,14 +89,6 @@ def ex_1_2_3_3 (K : Type*) [field K] (n : ℕ) : subgroup (matrix.general_linear
     rw [set.mem_set_of, matrix.general_linear_group.coe_fn_eq_coe] at ha ⊢,
     rw [matrix.coe_units_inv, matrix.det_nonsing_inv, ring.inverse_eq_inv', ha, inv_one] } }
 
-def l1_2_4 {G : Type*} [group G] (S : set $ subgroup G) : subgroup G :=
-{ carrier := ⋂ (H : subgroup  G) (HH : H ∈ S), (H : set G),
-  mul_mem' := λ a b ha hb, by {
-    simp only [set.mem_Inter, set_like.mem_coe] at ha hb ⊢,
-    exact λ H HH, subgroup.mul_mem H (ha H HH) (hb H HH) },
-  one_mem' := by {
-    simp only [set.mem_Inter, set_like.mem_coe],
-    exact λ H HH, one_mem _ },
-  inv_mem' := λ a ha, by {
-    simp only [set.mem_Inter, set_like.mem_coe] at ha ⊢,
-    exact λ H HH, subgroup.inv_mem _ (ha H HH), } }
+def l1_2_4 {G : Type*} [group G] (S : set $ subgroup G) : subgroup G := Inf S
+lemma l1_2_4' {G : Type*} [group G] (S : set $ subgroup G) :
+  ((l1_2_4 S) : set G) = ⋂ s ∈ S, (s : set G) := subgroup.coe_Inf _
