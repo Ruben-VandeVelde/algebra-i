@@ -3,6 +3,11 @@ import data.zmod.basic
 import group_theory.specific_groups.dihedral
 import linear_algebra.general_linear_group
 
+/-!
+§1. Groups
+§1.1 Definition and examples
+-/
+
 section
 
 variables {M A G : Type*}
