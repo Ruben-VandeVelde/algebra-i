@@ -92,3 +92,73 @@ def ex_1_2_3_3 (K : Type*) [field K] (n : ℕ) : subgroup (matrix.general_linear
 def l1_2_4 {G : Type*} [group G] (S : set $ subgroup G) : subgroup G := Inf S
 lemma l1_2_4' {G : Type*} [group G] (S : set $ subgroup G) :
   ((l1_2_4 S) : set G) = ⋂ s ∈ S, (s : set G) := subgroup.coe_Inf _
+
+def d1_2_5 {G : Type*} [group G] (X : set G) : subgroup G := subgroup.closure X
+lemma l1_2_5' {G : Type*} [group G] (X : set G) :
+  (subgroup.closure X : set G) = ⋂ H' ∈ {H : subgroup G | X ⊆ H}, (H' : set G) := rfl
+
+def n1_2_5_set  {G : Type*} [group G] (X : set G) :
+  set (list G) := { m : list G | ∀ x ∈ m, x ∈ X ∪ X⁻¹ }
+
+def n1_2_5 {G : Type*} [group G] (X : set G) : subgroup G :=
+{ carrier := { (list.prod x) | x ∈ n1_2_5_set X },
+  mul_mem' := begin
+    intros a b ha hb,
+    simp [set.mem_set_of] at ha hb ⊢,
+    obtain ⟨xa, hxa⟩ := ha,
+    obtain ⟨xb, hxb⟩ := hb,
+    refine ⟨xa ++ xb, _, _⟩,
+    { simp only [n1_2_5_set, set.mem_set_of] at hxa hxb ⊢,
+      intros x hx,
+      obtain hx'|hx' := list.mem_append.mp hx,
+      exacts [hxa.1 x hx', hxb.1 x hx'] },
+    { rw [list.prod_append, hxa.2, hxb.2] }
+  end,
+  one_mem' := begin
+    simp [set.mem_set_of],
+    refine ⟨[], _, list.prod_nil⟩,
+    simp [n1_2_5_set, set.mem_set_of]
+  end,
+  inv_mem' := begin
+    intros a ha,
+    simp [set.mem_set_of] at ha ⊢,
+    obtain ⟨xa, hxa⟩ := ha,
+    refine ⟨(xa.map has_inv.inv).reverse, _, _⟩,
+    { simpa [n1_2_5_set, set.mem_set_of, or_comm] using hxa.1 },
+    { rw [←hxa.2, list.prod_inv_reverse] }
+  end }
+
+-- 2019-2020
+lemma n1_2_5' {G : Type*} [group G] (X : set G) :
+  (subgroup.closure X : set G) = { (list.prod x) | x ∈ n1_2_5_set X } :=
+begin
+  simp [subgroup.closure],
+  apply subset_antisymm,
+  { intros x hx,
+    simp only [set.mem_Inter] at hx,
+    simp only [set.mem_set_of],
+    specialize hx (n1_2_5 X) _,
+    { intros y hy,
+      simp only [n1_2_5, set.mem_set_of, subgroup.coe_set_mk],
+      use [y :: list.nil],
+      simp [n1_2_5_set, hy] },
+    simpa [n1_2_5] using hx },
+  { intros x hx,
+    simp only [set.mem_set_of, n1_2_5_set] at hx,
+    simp only [set.mem_Inter],
+    intros i hi,
+    obtain ⟨y, h1, rfl⟩ := hx,
+    simp only [set_like.mem_coe],
+    induction y,
+    { simp [one_mem], },
+    { simp,
+      apply mul_mem,
+      { specialize h1 y_hd (list.mem_cons_self _ _),
+        obtain h1|h1 := (set.mem_union _ _ _).mp h1,
+        { apply hi h1 },
+        { rw ←inv_inv y_hd, apply inv_mem, apply hi, apply h1 } },
+      { apply y_ih,
+        intros y hy,
+        apply h1,
+        apply list.mem_cons_of_mem _ hy } } },
+end
