@@ -1,3 +1,4 @@
+import data.zmod.quotient
 import group_theory.subgroup.basic
 import linear_algebra.general_linear_group
 
@@ -68,14 +69,12 @@ def ex_1_2_3_1 {G : Type*} [group G] : subgroup G :=
     rw [ha, inv_one] } }
 
 def ex_1_2_3_2 (n : ℤ) : add_subgroup ℤ :=
-{ carrier := { k : ℤ | n ∣ k },
-  add_mem' := λ a b ha hb, by {
-    rw [set.mem_set_of] at ha hb ⊢,
-    exact dvd_add ha hb },
-  zero_mem' := set.mem_set_of.mpr $ dvd_zero _,
-  neg_mem' := λ a ha, by {
-    rw [set.mem_set_of] at ha ⊢,
-    exact (dvd_neg _ _).mpr ha } }
+add_subgroup.zmultiples n
+lemma l1_2_3_2 (n : ℤ) : (ex_1_2_3_2 n : set ℤ) = { k : ℤ | n ∣ k } :=
+begin
+  ext,
+  simp [ex_1_2_3_2, int.mem_zmultiples_iff],
+end
 
 def ex_1_2_3_3 (K : Type*) [field K] (n : ℕ) : subgroup (matrix.general_linear_group (fin n) K) :=
 { carrier := { A | matrix.det A = 1 },
@@ -158,3 +157,82 @@ begin
         { rw ←inv_inv y_hd, exact subgroup.inv_mem _ (hi h1) } },
       { exact y_ih (λ y hy, h1 _ (list.mem_cons_of_mem _ hy)) } } },
 end
+
+def l1_2_8_a {G : Type*} [group G] (H : subgroup G) : setoid G :=
+quotient_group.left_rel H
+lemma l1_2_8_b {G : Type*} [group G] [fintype G] (H : subgroup G) [fintype H] :
+  fintype.card H ∣ fintype.card G :=
+subgroup.card_subgroup_dvd_card H
+
+open_locale cardinal
+lemma l1_2_9 {G : Type*} [group G] (H : subgroup G) :
+  #(quotient (quotient_group.right_rel H)) = #(quotient (quotient_group.left_rel H))  :=
+cardinal.mk_congr $ quotient_group.quotient_right_rel_equiv_quotient_left_rel H
+
+def d1_2_10 {G : Type*} [group G] (H : subgroup G) := #(G ⧸ H)
+lemma d1_2_10' {G : Type*} [group G] [fintype G] (H : subgroup G) :
+  nat.card (G ⧸ H) = nat.card G / nat.card H :=
+begin
+  haveI : fintype H,
+  { classical, apply_instance },
+  have : 0 < nat.card H,
+  { rw [nat.card_eq_fintype_card, fintype.card_pos_iff],
+    exact ⟨⟨1, one_mem _⟩⟩ },
+  rw [←subgroup.card_mul_index H, nat.mul_div_cancel_left _ this, subgroup.index],
+end
+
+open_locale coset
+
+lemma xmp_1_2_11 (n : ℕ+) : add_subgroup.index (ex_1_2_3_2 n) = n :=
+begin
+  simp [ex_1_2_3_2, add_subgroup.index,
+    nat.card_congr (int.quotient_zmultiples_nat_equiv_zmod n).to_equiv, nat.card_eq_fintype_card,
+    zmod.card],
+end
+
+lemma n_1_2_13 {G : Type*} [group G] (A B : set G) (g : G) :
+  A = { (g * b) | b ∈ B } ↔ { (g⁻¹ * a) | a ∈ A } = B :=
+begin
+  split; { rintro rfl, ext, simp },
+end
+
+def ex_1_2_4' {G : Type*} [group G] (x : G × G) := x.1 * x.2
+lemma ex_1_2_4 {G : Type*} [group G] (A B : set G) :
+  #({ (ex_1_2_4' x) | x ∈ A ×ˢ B} : set G) ≤ #A * #B :=
+begin
+  simp only [ex_1_2_4', set.mem_prod, exists_prop, prod.exists],
+  calc # ↥{x | ∃ (a b : G), (a ∈ A ∧ b ∈ B) ∧ a * b = x}
+      = # ↥⋃ (a ∈ A) (b ∈ B), ({ (a : G) * (b : G) } : set G) : _
+  ... = # ↥⋃ (a : A) (b : B), ({ (a : G) * (b : G) } : set G) : _
+  ... ≤ cardinal.sum (λ (a : A), cardinal.sum $ λ (b : B), # ({ (a : G) * (b : G) } : set G)) : _
+  ... = # ↥A * # ↥B : _,
+  { congr' 2,
+    ext x,
+    simp [set.set_of_exists, set.set_of_and, ←exists_and_distrib_left, and_assoc] },
+  { simp only [set.Union_coe_set],
+    congr },
+  { exact cardinal.mk_Union_le_sum_mk.trans
+      (cardinal.sum_le_sum _ _ (λ a, cardinal.mk_Union_le_sum_mk)) },
+  { simp_rw [cardinal.mk_singleton, cardinal.sum_const', mul_one] },
+end
+
+lemma ex_1_2_5 {G : Type*} [group G] (A B : set G) (g : G) :
+  { (g * x) | x ∈ A ∩ B } = { (g * x) | x ∈ A } ∩ { (g * x) | x ∈ B } :=
+begin
+  ext y, simp only [set.mem_inter_eq, set.mem_set_of_eq, exists_prop],
+  split,
+  { rintro ⟨x, ⟨ha, hb⟩, hx⟩,
+    exact ⟨⟨x, ha, hx⟩, ⟨x, hb, hx⟩⟩ },
+  { rintro ⟨⟨x, ha, hx⟩, ⟨x', hb, hx'⟩⟩,
+    obtain rfl : x = x',
+    { rw [←mul_right_inj g, hx, hx'] },
+    exact ⟨x, ⟨ha, hb⟩, hx⟩ }
+end
+
+lemma ex_1_2_6 {G : Type*} [fintype G] [group G] (A B : subgroup G) (h : A ≤ B) :
+  subgroup.index A = subgroup.relindex A B * subgroup.index B :=
+(subgroup.relindex_mul_index h).symm
+
+lemma ex_1_2_7 {G : Type*} [group G] (A B : subgroup G) (h : A ≤ B) :
+  subgroup.index A = subgroup.relindex A B * subgroup.index B :=
+(subgroup.relindex_mul_index h).symm

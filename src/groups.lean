@@ -84,10 +84,10 @@ def l1_1_6_6 : comm_group trivial_group :=
 def l1_1_6_7 (K V : Type*) [field K] [add_comm_monoid V] [module K V] :
   add_comm_group V := module.add_comm_monoid_to_add_comm_group K
 
-def l1_1_6_8 (K V : Type*) [field K] (n : ℕ) :
+def l1_1_6_8 (K : Type*) [field K] (n : ℕ) :
   group $ matrix.general_linear_group (fin n) K := units.group
 
-noncomputable def l1_1_6_8' (K V n : Type*) [field K] [subsingleton n] :
+noncomputable def l1_1_6_8' (K n : Type*) [field K] [subsingleton n] :
   comm_group $ matrix.general_linear_group n K :=
 { mul_comm := λ a b, by
   { ext i j,
@@ -97,7 +97,7 @@ noncomputable def l1_1_6_8' (K V n : Type*) [field K] [subsingleton n] :
     rw [subsingleton.elim default i, subsingleton.elim j i, mul_comm] },
   ..(infer_instance : group _) }
 
-noncomputable def l1_1_6_8'' (K V n : Type*) [comm_semiring K] [subsingleton n] :
+noncomputable def l1_1_6_8'' (K n : Type*) [comm_semiring K] [subsingleton n] :
   comm_monoid $ matrix n n K :=
 { mul_comm := λ a b, by
   { rw [matrix.mul_eq_mul, matrix.mul_eq_mul],
