@@ -212,14 +212,7 @@ noncomputable def ex1_1_3 : group { z : ℂ // ∥z∥ = 1 } := {
 lemma ex1_1_3' : { z : ℂ | ∥z∥ = 1 } = { (complex.exp (θ * complex.I)) | (θ : ℝ) } :=
 begin
   ext z,
-  simp only [complex.norm_eq_abs, set.mem_set_of_eq],
-  split,
-  { have := complex.range_exp_mul_I,
-    simp only [set.range_eq_iff, mem_sphere_zero_iff_norm, complex.norm_eq_abs,
-      complex.abs_exp_of_real_mul_I, eq_self_iff_true, forall_const, true_and] at this,
-    exact this _ },
-  { rintro ⟨θ, hθ⟩,
-    rw [←hθ, complex.abs_exp_of_real_mul_I] },
+  simp only [complex.norm_eq_abs, set.mem_set_of_eq, complex.abs_eq_one_iff],
 end
 
 end ex1_1_3
