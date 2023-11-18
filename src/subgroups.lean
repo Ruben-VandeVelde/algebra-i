@@ -4,7 +4,7 @@ import data.zmod.quotient
 import field_theory.finite.basic
 import group_theory.perm.cycle.concrete
 import group_theory.subgroup.basic
-import linear_algebra.general_linear_group
+import linear_algebra.matrix.general_linear_group
 import ring_theory.int.basic
 
 open_locale nat
@@ -130,7 +130,10 @@ def n1_2_5 {G : Type*} [group G] (X : set G) : subgroup G :=
     simp [set.mem_set_of] at ha ⊢,
     obtain ⟨xa, hxa⟩ := ha,
     refine ⟨(xa.map has_inv.inv).reverse, _, _⟩,
-    { simpa [n1_2_5_set, set.mem_set_of, or_comm] using hxa.1 },
+    { rw [n1_2_5_set, set.mem_set_of] at hxa ⊢,
+      intros x hx,
+      rw [list.mem_reverse, list.mem_map, inv_involutive.exists_mem_and_apply_eq_iff] at hx,
+      simpa [or_comm] using hxa.1 _ hx },
     { rw [←hxa.2, list.prod_inv_reverse] }
   end }
 
@@ -226,7 +229,7 @@ end
 lemma ex_1_2_5 {G : Type*} [group G] (A B : set G) (g : G) :
   { (g * x) | x ∈ A ∩ B } = { (g * x) | x ∈ A } ∩ { (g * x) | x ∈ B } :=
 begin
-  ext y, simp only [set.mem_inter_eq, set.mem_set_of_eq, exists_prop],
+  ext y, simp only [set.mem_inter, set.mem_set_of_eq, exists_prop],
   split,
   { rintro ⟨x, ⟨ha, hb⟩, hx⟩,
     exact ⟨⟨x, ha, hx⟩, ⟨x, hb, hx⟩⟩ },
@@ -271,24 +274,9 @@ lemma l1_2_19 (G : Type*) [group G] (g : G) (d : ℤ) :
   g ^ d = 1 ↔ (order_of g : ℤ) ∣ d :=
 order_of_dvd_iff_zpow_eq_one.symm
 
-lemma zpow_eq_zpow_iff_modeq (G : Type*) [group G] (x : G) (m n : ℤ) :
-  x ^ n = x ^ m ↔ n ≡ m [ZMOD (order_of x)] :=
-begin
-  wlog hmn : m ≤ n,
-  obtain ⟨k, hk⟩ := int.eq_coe_of_zero_le (sub_nonneg_of_le hmn),
-  calc x ^ n = x ^ m
-      ↔ x ^ (k : ℤ) = 1 : _
-  ... ↔ x ^ k = 1 : _
-  ... ↔ _ : _,
-  { simp [←hk, zpow_sub, mul_inv_eq_one] },
-  { rw zpow_coe_nat },
-  { rw [pow_eq_one_iff_modeq, nat.modeq_zero_iff_dvd, ←int.coe_nat_dvd, ←hk,
-      ←zmod.int_coe_eq_int_coe_iff_dvd_sub, eq_comm, zmod.int_coe_eq_int_coe_iff] }
-end
-
 lemma l1_2_20_i (G : Type*) [group G] (g : G) (i j : ℤ) (h : is_of_fin_order g) :
   g ^ i = g ^ j ↔ i ≡ j [ZMOD (order_of g)] :=
-zpow_eq_zpow_iff_modeq G g j i
+zpow_eq_zpow_iff_modeq
 
 namespace subgroup
 lemma mem_closure_singleton' {G : Type*} [group G]
@@ -317,9 +305,6 @@ lemma l1_2_20_i' (G : Type*) [group G] (g : G) (h : is_of_fin_order g) :
 begin
   ext, simp [subgroup.mem_closure_singleton' h],
 end
-
-@[simp] lemma int.modeq_zero_iff {a b : ℤ} : a ≡ b [ZMOD 0] ↔ a = b :=
-by rw [int.modeq, int.mod_zero, int.mod_zero]
 
 lemma l1_2_20_ii (G : Type*) [group G] (g : G) (i j : ℤ) (h : ¬is_of_fin_order g) :
   g ^ i = g ^ j ↔ i = j :=
@@ -425,7 +410,7 @@ begin
 end
 
 lemma l1_2_23 (n : ℕ+) (x : ℤ) (h : is_coprime x n) : x ^ nat.totient n ≡ 1 [ZMOD n] :=
-by rw [coe_coe n, ←eq_iff_modeq_int (zmod n), int.cast_pow, int.cast_one,
+by rw [coe_coe n, ←char_p.int_cast_eq_int_cast (zmod n), int.cast_pow, int.cast_one,
     ←coe_unit_of_is_coprime _ h, ←units.coe_pow, units.coe_eq_one, ←zmod.pow_totient' _]
 
 noncomputable def d1_2_24 (G : Type*) [group G] : ℕ := monoid.exponent G
@@ -488,7 +473,7 @@ begin
 end
 
 lemma n1_2_24' {G : Type*} [group G] [fintype G] : d1_2_24 G ≠ 0 :=
-monoid.exponent_ne_zero_of_fintype
+monoid.exponent_ne_zero_of_finite
 
 lemma l1_2_25 {G : Type*} [group G] [fintype G] : d1_2_24 G ∣ fintype.card G :=
 monoid.exponent_dvd_of_forall_pow_eq_one G (fintype.card G) $ l1_2_21' G
@@ -590,6 +575,8 @@ begin
   have : (equiv.swap (1 : fin 4) 3 * equiv.swap 3 2 * (equiv.swap 1 3 * equiv.swap 3 2)) 1 = 1,
   { rw this, simp only [id.def, equiv.perm.coe_one, eq_self_iff_true], },
   norm_num at this,
+  contrapose! this,
+  dec_trivial,
 end
 
 lemma ex_1_2_10_ii : nat.card { x : equiv.perm (fin 4) // order_of x = 2 } = 9 :=

@@ -1,7 +1,7 @@
 import analysis.inner_product_space.pi_L2
 import data.zmod.basic
 import group_theory.specific_groups.dihedral
-import linear_algebra.general_linear_group
+import linear_algebra.matrix.general_linear_group
 
 /-!
 §1. Groups
@@ -50,13 +50,13 @@ end mulint
 
 -- TODO: add_zero_class short-circuit in data/int/basic.lean?
 
-noncomputable def l1_1_6_2 (n : ℤ) : add_comm_group $ mulint n :=
+def l1_1_6_2 (n : ℤ) : add_comm_group $ mulint n :=
 { add := mulint.add n,
   add_assoc := λ ⟨a, ha⟩ ⟨b, hb⟩ ⟨c, hc⟩, subtype.eq $ add_assoc a b c,
   zero := ⟨0, dvd_zero _⟩,
   zero_add := λ ⟨a, ha⟩, subtype.eq $ zero_add a,
   add_zero := λ ⟨a, ha⟩, subtype.eq $ add_zero a,
-  neg := λ ⟨a, ha⟩, ⟨-a, (dvd_neg n a).mpr ha⟩,
+  neg := λ ⟨a, ha⟩, ⟨-a, dvd_neg.mpr ha⟩,
   add_left_neg := λ ⟨a, ha⟩, subtype.eq $ add_left_neg a,
   add_comm := λ ⟨a, ha⟩ ⟨b, hb⟩, subtype.eq $ add_comm a b, }
 
@@ -87,7 +87,7 @@ def l1_1_6_7 (K V : Type*) [field K] [add_comm_monoid V] [module K V] :
 def l1_1_6_8 (K : Type*) [field K] (n : ℕ) :
   group $ matrix.general_linear_group (fin n) K := units.group
 
-noncomputable def l1_1_6_8' (K n : Type*) [field K] [subsingleton n] :
+def l1_1_6_8' (K n : Type*) [field K] [subsingleton n] [fintype n] :
   comm_group $ matrix.general_linear_group n K :=
 { mul_comm := λ a b, by
   { ext i j,
@@ -97,7 +97,7 @@ noncomputable def l1_1_6_8' (K n : Type*) [field K] [subsingleton n] :
     rw [subsingleton.elim default i, subsingleton.elim j i, mul_comm] },
   ..(infer_instance : group _) }
 
-noncomputable def l1_1_6_8'' (K n : Type*) [comm_semiring K] [subsingleton n] :
+def l1_1_6_8'' (K n : Type*) [comm_semiring K] [subsingleton n] [fintype n] :
   comm_monoid $ matrix n n K :=
 { mul_comm := λ a b, by
   { rw [matrix.mul_eq_mul, matrix.mul_eq_mul],
@@ -111,7 +111,7 @@ noncomputable def l1_1_6_8'' (K n : Type*) [comm_semiring K] [subsingleton n] :
 def l1_1_6_9 (α : Type*) (X : set α) : group (equiv.perm X) := infer_instance
 
 noncomputable def l1_1_6_10 (n : ℕ) :
-  group $ isometric (euclidean_space ℝ (fin n)) (euclidean_space ℝ (fin n)) := infer_instance
+  group $ isometry_equiv (euclidean_space ℝ (fin n)) (euclidean_space ℝ (fin n)) := infer_instance
 
 def l1_1_6_11 (n : ℕ) : group (dihedral_group n) := infer_instance
 
@@ -176,28 +176,28 @@ end ex1_1_2
 
 namespace ex1_1_3
 
-instance : has_mul { z : ℂ // ∥z∥ = 1 } :=
+instance : has_mul { z : ℂ // ‖z‖ = 1 } :=
 ⟨λ a b, ⟨a * b, by rw [norm_mul, a.prop, b.prop, one_mul]⟩⟩
 
-lemma mul_def (a b : { z : ℂ // ∥z∥ = 1 }) :
+lemma mul_def (a b : { z : ℂ // ‖z‖ = 1 }) :
   a * b = ⟨a * b, by rw [norm_mul, a.prop, b.prop, one_mul]⟩ := rfl
 
-def mul_assoc (a b c : { z : ℂ // ∥z∥ = 1 }) : a * b * c = a * (b * c) :=
+def mul_assoc (a b c : { z : ℂ // ‖z‖ = 1 }) : a * b * c = a * (b * c) :=
 begin
   simp [mul_def, mul_assoc],
 end
 
-noncomputable instance : has_inv { z : ℂ // ∥z∥ = 1 } :=
+noncomputable instance : has_inv { z : ℂ // ‖z‖ = 1 } :=
 ⟨λ a, ⟨a⁻¹, by rw [norm_inv, a.prop, inv_one]⟩⟩
 
-lemma inv_def (a : { z : ℂ // ∥z∥ = 1 }) :
+lemma inv_def (a : { z : ℂ // ‖z‖ = 1 }) :
   a⁻¹ = ⟨a⁻¹, by rw [norm_inv, a.prop, inv_one]⟩ := rfl
 
-instance : has_one { z : ℂ // ∥z∥ = 1 } := ⟨⟨1, norm_one⟩⟩
+instance : has_one { z : ℂ // ‖z‖ = 1 } := ⟨⟨1, norm_one⟩⟩
 
-lemma one_def : (1 : { z : ℂ // ∥z∥ = 1 }) = ⟨1, norm_one⟩ := rfl
+lemma one_def : (1 : { z : ℂ // ‖z‖ = 1 }) = ⟨1, norm_one⟩ := rfl
 
-noncomputable def ex1_1_3 : group { z : ℂ // ∥z∥ = 1 } := {
+noncomputable def ex1_1_3 : group { z : ℂ // ‖z‖ = 1 } := {
   mul := (*),
   mul_assoc := mul_assoc,
   one := 1,
@@ -209,7 +209,7 @@ noncomputable def ex1_1_3 : group { z : ℂ // ∥z∥ = 1 } := {
     { rw [←norm_ne_zero_iff, a.prop], exact one_ne_zero },
     simp [mul_def, inv_def, inv_mul_cancel this, one_def] } }
 
-lemma ex1_1_3' : { z : ℂ | ∥z∥ = 1 } = { (complex.exp (θ * complex.I)) | (θ : ℝ) } :=
+lemma ex1_1_3' : { z : ℂ | ‖z‖ = 1 } = { (complex.exp (θ * complex.I)) | (θ : ℝ) } :=
 begin
   ext z,
   simp only [complex.norm_eq_abs, set.mem_set_of_eq, complex.abs_eq_one_iff],
