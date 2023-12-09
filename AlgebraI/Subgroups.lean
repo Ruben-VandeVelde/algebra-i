@@ -3,6 +3,7 @@ import Mathlib.Data.Nat.Totient
 import Mathlib.Data.ZMod.Quotient
 import Mathlib.FieldTheory.Finite.Basic
 import Mathlib.GroupTheory.Perm.Cycle.Concrete
+import Mathlib.GroupTheory.SpecificGroups.Dihedral
 import Mathlib.GroupTheory.Subgroup.Basic
 import Mathlib.LinearAlgebra.Matrix.GeneralLinearGroup
 import Mathlib.RingTheory.Int.Basic
@@ -191,8 +192,6 @@ theorem d1_2_10' {G : Type*} [Group G] [Fintype G] (H : Subgroup G) :
     rw [Nat.card_eq_fintype_card, Fintype.card_pos_iff]
     exact ⟨⟨1, one_mem _⟩⟩
   rw [← Subgroup.card_mul_index H, Nat.mul_div_cancel_left _ this, Subgroup.index]
-
-open scoped Coset
 
 theorem xmp_1_2_11 (n : ℕ+) : AddSubgroup.index (ex1232 n) = n := by
   simp [ex1232, AddSubgroup.index, Nat.card_congr (Int.quotientZmultiplesNatEquivZMod n).toEquiv,
@@ -513,25 +512,70 @@ theorem ex_1_2_9 {G : Type*} [Group G] [Fintype G] (A B : Subgroup G)
 theorem ex_1_2_10_i (n : ℕ) : Nat.card (Equiv.Perm (Fin n)) = n ! := by
   rw [Nat.card_eq_fintype_card, Fintype.card_perm, Fintype.card_fin]
 
-example : orderOf c[(1 : Fin 4), 2] = 2 := by
-  apply orderOf_eq_prime
-  · simp only [List.formPerm_cons_cons, mul_one, Equiv.swap_mul_self, List.formPerm_singleton,
-      eq_self_iff_true, sq, Cycle.formPerm_coe]
-  · simp [Fin.ext_iff]
+theorem ex_1_2_10_ii_aux_1 (x : Equiv.Perm (Fin 4)) :
+    orderOf x = 2 ↔ x ≠ 1 ∧ x ^ 2 = 1 := by
+  rw [orderOf_eq_iff two_pos]
+  constructor
+  · rintro ⟨h1, h2⟩
+    refine ⟨?_, h1⟩
+    have := h2 1 one_lt_two one_pos
+    rwa [pow_one] at this
+  · rintro ⟨h1, h2⟩
+    refine ⟨h2, ?_⟩
+    intros m hm1 hm2
+    obtain rfl : m = 1 := by linarith
+    rwa [pow_one]
 
-open Equiv in
+example : orderOf c[(1 : Fin 4), 2] = 2 := by
+  rw [ex_1_2_10_ii_aux_1]; decide
+
 example : orderOf c[(1 : Fin 4), 3, 2] ≠ 2 := by
-  intro h
-  have := pow_orderOf_eq_one c[(1 : Fin 4), 3, 2]
-  rw [h, sq] at this
-  simp only [Cycle.formPerm_coe, List.formPerm_cons_cons, List.formPerm_singleton, mul_one] at this
-  have : (swap (1 : Fin 4) 3 * swap 3 2 * (swap 1 3 * swap 3 2) : Perm (Fin 4)) 1 = 1 := by
-    rw [this]; simp only [id.def, Perm.coe_one, eq_self_iff_true]
-  norm_num at this
-  contrapose! this
+  rw [Ne, ex_1_2_10_ii_aux_1]; decide
+
+theorem ex_1_2_10_ii : Nat.card { x : Equiv.Perm (Fin 4) // orderOf x = 2 } = 9 := by
+  rw [Nat.card_eq_fintype_card]
+  simp_rw [ex_1_2_10_ii_aux_1]
   decide
 
-theorem ex_1_2_10_ii : Nat.card { x : Equiv.Perm (Fin 4) // orderOf x = 2 } = 9 := by sorry
+theorem Monoid.exponent_dvd_card {G : Type*} [Group G] [Fintype G] :
+    Monoid.exponent G ∣ Fintype.card G :=
+  Monoid.exponent_dvd_of_forall_pow_eq_one G (Fintype.card G) <| fun _ =>
+    orderOf_dvd_iff_pow_eq_one.mp orderOf_dvd_card
+
+theorem Monoid.ExponentExists.ofFintype (α : Type*) [Group α] [Fintype α] : Monoid.ExponentExists α := by
+  simp only [Monoid.ExponentExists]
+  refine ⟨Fintype.card α, Fintype.card_pos, fun g => ?_⟩
+  · rw [← orderOf_dvd_iff_pow_eq_one]
+    exact orderOf_dvd_card
+
+-- Bepaal exp(S_5) en exp(S_6).
+-- TODO: bewijs
+#eval Nat.find (Monoid.ExponentExists.ofFintype (Equiv.Perm (Fin 5)))
+#eval Nat.find (Monoid.ExponentExists.ofFintype (Equiv.Perm (Fin 6)))
+
+theorem ex_1_2_11_i (n : ℕ) : Nat.card (DihedralGroup n) = 2 * n :=
+  DihedralGroup.nat_card
+
+theorem Nat.card_subtype {α : Type u_1} [inst : Fintype α] (p : α → Prop) [ DecidablePred p] :
+    Nat.card { x // p x } = Finset.card (Finset.filter p Finset.univ) := by
+  rw [← Fintype.card_subtype]
+  rw [@card_eq_fintype_card]
+
+theorem ZMod.val_ofNat {n : ℕ} (a : ℕ) [a.AtLeastTwo] :
+    (no_index (OfNat.ofNat a) : ZMod n).val = a % n :=
+  val_nat_cast a
+
+theorem ZMod.val_ofNat_of_lt {n a : ℕ} [a.AtLeastTwo] (h : a < n) :
+    (no_index (OfNat.ofNat a) : ZMod n).val = a :=
+  val_nat_cast_of_lt h
+
+open DihedralGroup in
+theorem ex_1_2_11_ii {n : ℕ} (hn : 3 ≤ n) : ¬ IsCommutative (DihedralGroup n) (· * ·) := by
+  rintro ⟨h⟩
+  have := h (r 1) (sr 0)
+  simp only [r_mul_sr, zero_sub, sr_mul_r, zero_add, sr.injEq] at this
+  rw [neg_eq_iff_add_eq_zero, one_add_one_eq_two, ← ZMod.val_eq_zero, ZMod.val_ofNat_of_lt hn] at this
+  contradiction
 
 /-
 Ex
