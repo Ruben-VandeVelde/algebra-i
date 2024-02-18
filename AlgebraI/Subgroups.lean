@@ -524,10 +524,13 @@ theorem ex_1_2_10_ii : Nat.card { x : Equiv.Perm (Fin 4) // orderOf x = 2 } = 9 
   simp_rw [ex_1_2_10_ii_aux_1]
   decide
 
--- Bepaal exp(S_5) en exp(S_6).
--- TODO: bewijs
-#eval Nat.find (Monoid.ExponentExists.of_finite (G := Equiv.Perm (Fin 5)))
-#eval Nat.find (Monoid.ExponentExists.of_finite (G := Equiv.Perm (Fin 6)))
+theorem ex_1_2_10_iii_5 :
+    Nat.find (Monoid.ExponentExists.of_finite (G := Equiv.Perm (Fin 5))) = 60 := by
+  native_decide
+
+theorem ex_1_2_10_iii_6 :
+    Nat.find (Monoid.ExponentExists.of_finite (G := Equiv.Perm (Fin 6))) = 60 := by
+  native_decide
 
 theorem ex_1_2_11_i (n : ℕ) : Nat.card (DihedralGroup n) = 2 * n :=
   DihedralGroup.nat_card
