@@ -7,6 +7,7 @@ import Mathlib.GroupTheory.SpecificGroups.Dihedral
 import Mathlib.GroupTheory.Subgroup.Basic
 import Mathlib.LinearAlgebra.Matrix.GeneralLinearGroup
 import Mathlib.RingTheory.Int.Basic
+import Mathlib.GroupTheory.SpecificGroups.KleinFour
 
 open scoped Nat
 
@@ -354,7 +355,7 @@ theorem l1_2_21 (G : Type*) [Group G] [Fintype G] (g : G) : orderOf g ∣ Fintyp
   orderOf_dvd_card
 
 theorem l1_2_21' (G : Type*) [Group G] [Fintype G] (g : G) : g ^ Fintype.card G = 1 :=
-  orderOf_dvd_iff_pow_eq_one.mp orderOf_dvd_card
+  pow_card_eq_one
 
 namespace Int
 
@@ -403,18 +404,25 @@ theorem d1224_dvd' {G : Type*} [Group G] (n : ℕ) (h : ∀ g : G, orderOf g ∣
   Monoid.exponent_dvd_of_forall_pow_eq_one G n <|
     forall_imp (fun _ => orderOf_dvd_iff_pow_eq_one.mp) h
 
-theorem commute_of_order_dvd_two {G : Type*} [Group G] {a b : G} (h : ∀ g : G, orderOf g ∣ 2) :
+@[to_additive]
+theorem commute_of_order_dvd_two {G : Type*} [Monoid G] [IsCancelMul G] {a b : G} (h : ∀ g : G, orderOf g ∣ 2) :
     a * b = b * a := by
   simp_rw [orderOf_dvd_iff_pow_eq_one] at h
   rw [← mul_right_inj a, ← mul_left_inj b]
   calc
-    a * (a * b) * b = a ^ 2 * b ^ 2 := by simp only [sq]; group
+    a * (a * b) * b = a ^ 2 * b ^ 2 := by simp only [pow_two]; group
     _ = 1 := by rw [h, h, mul_one]
     _ = (a * b) ^ 2 := by rw [h]
-    _ = a * (b * a) * b := by simp only [sq]; group
+    _ = a * (b * a) * b := by simp only [pow_two]; group
+theorem commute_of_order_dvd_two' {G : Type*} [Group G] {a b : G} (h : ∀ g : G, orderOf g ∣ 2) :
+    a * b = b * a := commute_of_order_dvd_two h
 
 example {G : Type*} [Group G] (h : Monoid.exponent G = 2) (a b : G) : a * b = b * a :=
-  commute_of_order_dvd_two fun g => h ▸ Monoid.order_dvd_exponent g
+  mul_comm_of_exponent_two h a b
+@[to_additive]
+lemma mul_comm_of_exponent_two'  {G : Type*} [Group G]  (hG : Monoid.exponent G = 2) (x y : G) :
+    x * y = y * x :=
+  commute_of_order_dvd_two fun g => hG ▸ Monoid.order_dvd_exponent g
 
 theorem n1_2_24 :
     ∃ (G : Type) (_ : AddGroup G), (∀ g : G, IsOfFinAddOrder g) ∧ AddMonoid.exponent G = 0 := by
@@ -539,8 +547,14 @@ theorem ex_1_2_10_ii : Nat.card { x : Equiv.Perm (Fin 4) // orderOf x = 2 } = 9 
 
 theorem Monoid.exponent_dvd_card {G : Type*} [Group G] [Fintype G] :
     Monoid.exponent G ∣ Fintype.card G :=
-  Monoid.exponent_dvd_of_forall_pow_eq_one G (Fintype.card G) <| fun _ =>
-    orderOf_dvd_iff_pow_eq_one.mp orderOf_dvd_card
+  l1_2_25
+
+theorem Monoid.ExponentExists.ofFinite (G : Type*) [Group G] [Finite G] : Monoid.ExponentExists G := by
+  let _inst := Fintype.ofFinite
+  simp only [Monoid.ExponentExists]
+  refine ⟨Fintype.card G, Fintype.card_pos, fun g => ?_⟩
+  · rw [← orderOf_dvd_iff_pow_eq_one]
+    exact orderOf_dvd_card
 
 theorem Monoid.ExponentExists.ofFintype (α : Type*) [Group α] [Fintype α] : Monoid.ExponentExists α := by
   simp only [Monoid.ExponentExists]
