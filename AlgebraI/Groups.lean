@@ -86,7 +86,7 @@ def l1167 (K V : Type*) [Field K] [AddCommMonoid V] [Module K V] : AddCommGroup 
   Module.addCommMonoidToAddCommGroup K
 
 def l1168 (K : Type*) [Field K] (n : ℕ) : Group <| Matrix.GeneralLinearGroup (Fin n) K :=
-  Units.instGroupUnits -- TODO fix name
+  Units.instGroup
 
 def l1168' (K n : Type*) [Field K] [Subsingleton n] [Fintype n] :
     CommGroup <| Matrix.GeneralLinearGroup n K :=
@@ -125,8 +125,8 @@ theorem ex_1_1_1 {G : Type*} [Group G] (x y : G) : (x * y)⁻¹ = y⁻¹ * x⁻�
 
 namespace Ex112
 
-variable {G : Type*} [One G] [Mul G] [Inv G] [IsAssociative G (· * ·)] (h1 : ∀ a : G, a * 1 = a)
-  (h2 : ∀ a : G, a * a⁻¹ = 1)
+variable {G : Type*} [One G] [Mul G] [Inv G] [Std.Associative (α := G) (· * ·)]
+  (h1 : ∀ a : G, a * 1 = a) (h2 : ∀ a : G, a * a⁻¹ = 1)
 
 -- Based on https://math.stackexchange.com/questions/537572/any-set-with-associativity-left-identity-left-inverse-is-a-group
 theorem one_mul (a : G) : 1 * a = a := by
@@ -136,18 +136,18 @@ theorem one_mul (a : G) : 1 * a = a := by
       _ = a * a⁻¹ * 1 := ?_
       _ = a * 1 * a⁻¹ := ?_
       _ = a * (a * a⁻¹) * a⁻¹ := ?_
-    · rw [← @IsAssociative.assoc _ (· * ·), ← @IsAssociative.assoc _ (· * ·)]
+    · rw [← @Std.Associative.assoc _ (· * ·), ← @Std.Associative.assoc _ (· * ·)]
     · rw [h2]
     · rw [h1, h1]
     · rw [h2]
   have : a * (a⁻¹ * a) = a * (a * a⁻¹) := by
     have := congr_arg (· * a⁻¹⁻¹) this
     simp only at this
-    rw [@IsAssociative.assoc _ (· * ·), h2, h1] at this
-    rw [@IsAssociative.assoc _ (· * ·), h2 a⁻¹, h1] at this
+    rw [@Std.Associative.assoc _ (· * ·), h2, h1] at this
+    rw [@Std.Associative.assoc _ (· * ·), h2 a⁻¹, h1] at this
     exact this
   rw [h2, h1] at this
-  rwa [← h2 a, @IsAssociative.assoc _ (· * ·)]
+  rwa [← h2 a, @Std.Associative.assoc _ (· * ·)]
 
 theorem mul_left_inv (a : G) : a⁻¹ * a = 1 := by
   calc
@@ -157,14 +157,14 @@ theorem mul_left_inv (a : G) : a⁻¹ * a = 1 := by
   calc
     a = a * 1 := (h1 a).symm
     _ = a * (a⁻¹ * a⁻¹⁻¹) := by rw [h2]
-    _ = a * a⁻¹ * a⁻¹⁻¹ := (IsAssociative.assoc a a⁻¹ a⁻¹⁻¹).symm
+    _ = a * a⁻¹ * a⁻¹⁻¹ := (Std.Associative.assoc a a⁻¹ a⁻¹⁻¹).symm
     _ = 1 * a⁻¹⁻¹ := by rw [h2]
     _ = a⁻¹⁻¹ := one_mul h1 h2 a⁻¹⁻¹
 
 def ex112 : Group G :=
   { (by assumption : One G), (by assumption : Mul G),
     (by assumption : Inv G) with
-    mul_assoc := IsAssociative.assoc
+    mul_assoc := Std.Associative.assoc
     mul_left_inv := by convert mul_left_inv h1 h2
     one_mul := by convert one_mul h1 h2
     mul_one := h1 }

@@ -195,7 +195,7 @@ theorem d1_2_10' {G : Type*} [Group G] [Fintype G] (H : Subgroup G) :
   rw [← Subgroup.card_mul_index H, Nat.mul_div_cancel_left _ this, Subgroup.index]
 
 theorem xmp_1_2_11 (n : ℕ+) : AddSubgroup.index (ex1232 n) = n := by
-  simp [ex1232, AddSubgroup.index, Nat.card_congr (Int.quotientZmultiplesNatEquivZMod n).toEquiv,
+  simp [ex1232, AddSubgroup.index, Nat.card_congr (Int.quotientZMultiplesNatEquivZMod n).toEquiv,
     Nat.card_eq_fintype_card, ZMod.card]
 
 theorem n_1_2_13 {G : Type*} [Group G] (A B : Set G) (g : G) :
@@ -401,28 +401,7 @@ theorem d1224_dvd {G : Type*} [Group G] (g : G) : orderOf g ∣ d1224 G :=
   Monoid.order_dvd_exponent g
 
 theorem d1224_dvd' {G : Type*} [Group G] (n : ℕ) (h : ∀ g : G, orderOf g ∣ n) : d1224 G ∣ n :=
-  Monoid.exponent_dvd_of_forall_pow_eq_one G n <|
-    forall_imp (fun _ => orderOf_dvd_iff_pow_eq_one.mp) h
-
-@[to_additive]
-theorem commute_of_order_dvd_two {G : Type*} [Monoid G] [IsCancelMul G] {a b : G} (h : ∀ g : G, orderOf g ∣ 2) :
-    a * b = b * a := by
-  simp_rw [orderOf_dvd_iff_pow_eq_one] at h
-  rw [← mul_right_inj a, ← mul_left_inj b]
-  calc
-    a * (a * b) * b = a ^ 2 * b ^ 2 := by simp only [pow_two]; group
-    _ = 1 := by rw [h, h, mul_one]
-    _ = (a * b) ^ 2 := by rw [h]
-    _ = a * (b * a) * b := by simp only [pow_two]; group
-theorem commute_of_order_dvd_two' {G : Type*} [Group G] {a b : G} (h : ∀ g : G, orderOf g ∣ 2) :
-    a * b = b * a := commute_of_order_dvd_two h
-
-example {G : Type*} [Group G] (h : Monoid.exponent G = 2) (a b : G) : a * b = b * a :=
-  mul_comm_of_exponent_two h a b
-@[to_additive]
-lemma mul_comm_of_exponent_two'  {G : Type*} [Group G]  (hG : Monoid.exponent G = 2) (x y : G) :
-    x * y = y * x :=
-  commute_of_order_dvd_two fun g => hG ▸ Monoid.order_dvd_exponent g
+  Monoid.exponent_dvd_of_forall_pow_eq_one <| forall_imp (fun _ => orderOf_dvd_iff_pow_eq_one.mp) h
 
 theorem n1_2_24 :
     ∃ (G : Type) (_ : AddGroup G), (∀ g : G, IsOfFinAddOrder g) ∧ AddMonoid.exponent G = 0 := by
@@ -443,13 +422,13 @@ theorem n1_2_24 :
     rw [Int.smul_one_eq_coe, Rat.coe_int_den, one_div, mul_inv_rev, ← mul_assoc,
       mul_inv_cancel ((@Nat.cast_ne_zero ℚ _ _ _).mpr hn.ne'), one_mul, ← Int.cast_two,
       Rat.inv_coe_int_den]
-    norm_num; decide
+    norm_num
 
 theorem n1_2_24' {G : Type*} [Group G] [Fintype G] : d1224 G ≠ 0 :=
   Monoid.exponent_ne_zero_of_finite
 
 theorem l1_2_25 {G : Type*} [Group G] [Fintype G] : d1224 G ∣ Fintype.card G :=
-  Monoid.exponent_dvd_of_forall_pow_eq_one G (Fintype.card G) <| l1_2_21' G
+  Group.exponent_dvd_card
 
 theorem l1_2_25' {G : Type*} [Group G] : d1224 G ∣ Nat.card G := by
   cases fintypeOrInfinite G
@@ -500,7 +479,7 @@ def l1226Iii''' {G : Type*} [Group G] (h : (d1226Iii G : Set G) = {1}) : CommGro
 
 theorem ex_1_2_8 {G : Type*} [Group G] (h : ∀ g : G, g = 1 ∨ orderOf g = 2) (a b : G) :
     a * b = b * a := by
-  refine' commute_of_order_dvd_two fun g => _
+  refine Commute.of_orderOf_dvd_two (fun g => ?_) a b
   obtain rfl | h := h g
   · rw [orderOf_one]; exact one_dvd _
   · rw [← h]
@@ -545,27 +524,10 @@ theorem ex_1_2_10_ii : Nat.card { x : Equiv.Perm (Fin 4) // orderOf x = 2 } = 9 
   simp_rw [ex_1_2_10_ii_aux_1]
   decide
 
-theorem Monoid.exponent_dvd_card {G : Type*} [Group G] [Fintype G] :
-    Monoid.exponent G ∣ Fintype.card G :=
-  l1_2_25
-
-theorem Monoid.ExponentExists.ofFinite (G : Type*) [Group G] [Finite G] : Monoid.ExponentExists G := by
-  let _inst := Fintype.ofFinite
-  simp only [Monoid.ExponentExists]
-  refine ⟨Fintype.card G, Fintype.card_pos, fun g => ?_⟩
-  · rw [← orderOf_dvd_iff_pow_eq_one]
-    exact orderOf_dvd_card
-
-theorem Monoid.ExponentExists.ofFintype (α : Type*) [Group α] [Fintype α] : Monoid.ExponentExists α := by
-  simp only [Monoid.ExponentExists]
-  refine ⟨Fintype.card α, Fintype.card_pos, fun g => ?_⟩
-  · rw [← orderOf_dvd_iff_pow_eq_one]
-    exact orderOf_dvd_card
-
 -- Bepaal exp(S_5) en exp(S_6).
 -- TODO: bewijs
-#eval Nat.find (Monoid.ExponentExists.ofFintype (Equiv.Perm (Fin 5)))
-#eval Nat.find (Monoid.ExponentExists.ofFintype (Equiv.Perm (Fin 6)))
+#eval Nat.find (Monoid.ExponentExists.of_finite (G := Equiv.Perm (Fin 5)))
+#eval Nat.find (Monoid.ExponentExists.of_finite (G := Equiv.Perm (Fin 6)))
 
 theorem ex_1_2_11_i (n : ℕ) : Nat.card (DihedralGroup n) = 2 * n :=
   DihedralGroup.nat_card
@@ -584,7 +546,7 @@ theorem ZMod.val_ofNat_of_lt {n a : ℕ} [a.AtLeastTwo] (h : a < n) :
   val_nat_cast_of_lt h
 
 open DihedralGroup in
-theorem ex_1_2_11_ii {n : ℕ} (hn : 3 ≤ n) : ¬ IsCommutative (DihedralGroup n) (· * ·) := by
+theorem ex_1_2_11_ii {n : ℕ} (hn : 3 ≤ n) : ¬ Std.Commutative (α := DihedralGroup n) (· * ·) := by
   rintro ⟨h⟩
   have := h (r 1) (sr 0)
   simp only [r_mul_sr, zero_sub, sr_mul_r, zero_add, sr.injEq] at this
